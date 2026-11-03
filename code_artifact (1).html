@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猜拳大冒險：裝備技能強化版</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font - Inter & Press Start 2P for gaming vibe -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            min-height: 100vh;
+            color: #f8fafc;
+        }
+
+        .pixel-font {
+            font-family: 'Press Start 2P', cursive, 'Noto Sans TC';
+        }
+
+        /* Glassmorphism styling */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(168, 85, 247, 0.5);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(168, 85, 247, 0.3);
+        }
+
+        .glass-card.selected {
+            border-color: #a855f7;
+            background: rgba(168, 85, 247, 0.15);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+        }
+
+        /* Battle shake & bounce animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px) rotate(-5deg); }
+            40%, 80% { transform: translateX(10px) rotate(5deg); }
+        }
+
+        .animate-shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(234, 179, 8, 0.8); }
+        }
+
+        .skill-active-glow {
+            animation: pulse-glow 1.5s infinite;
+        }
+
+        /* Custom scrollbar for combat log */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(168, 85, 247, 0.5);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(168, 85, 247, 0.8);
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen justify-between p-4 md:p-6 select-none">
+
+    <!-- Header / Title -->
+    <header class="text-center my-4">
+        <h1 class="text-3xl md:text-5xl font-extrabold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300 drop-shadow-lg">
+            <i class="fa-solid font-black fa-hand-fist mr-2"></i>猜拳大冒險
+        </h1>
+        <p class="text-slate-400 text-sm md:text-base mt-2">裝備神器 ‧ 發動技能 ‧ 登上巔峰</p>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl w-full mx-auto flex-grow flex flex-col justify-center">
+
+        <!-- ================= PAGE 1: CHARACTER CREATION & EQUIPMENT SELECT ================= -->
+        <section id="setup-screen" class="glass-panel rounded-3xl p-6 md:p-8 shadow-2xl transition-all duration-500">
+            <h2 class="text-xl md:text-2xl font-bold text-center text-purple-300 mb-6 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-user-shield"></i> 創建你的冒險者
+            </h2>
+
+            <!-- Player Name Input -->
+            <div class="mb-8 max-w-md mx-auto">
+                <label for="player-name-input" class="block text-sm font-medium text-slate-300 mb-2">冒險者尊姓大名</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-helmet-safety"></i>
+                    </div>
+                    <input type="text" id="player-name-input" placeholder="請輸入你的稱號..." value="傳奇英雄"
+                           class="w-full pl-10 pr-4 py-3 bg-slate-900/80 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-slate-100 placeholder-slate-500 outline-none transition">
+                </div>
+            </div>
+
+            <!-- Equipment Selection Grid -->
+            <h3 class="text-lg font-semibold text-slate-200 mb-4 text-center">選擇初始裝備 (三選一)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                
+                <!-- Equipment 1 -->
+                <div class="glass-card rounded-2xl p-5 cursor-pointer relative flex flex-col justify-between eq-card" data-eq="1">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mb-3">
+                            <i class="fa-solid fa-keyboard"></i>
+                        </div>
+                        <h4 class="font-bold text-lg text-amber-300 mb-1">黃金鍵盤</h4>
+                        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 mb-3 border border-amber-500/30">
+                            技能：雙倍傷害
+                        </span>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            獲勝時效果發動，直接獲得 <strong class="text-amber-300">2 分 (雙倍勝場)</strong>！
+                        </p>
+                    </div>
+                    <div class="mt-4 text-xs text-slate-500 border-t border-slate-700/50 pt-2 text-right">
+                        每局限用 1 次
+                    </div>
+                </div>
+
+                <!-- Equipment 2 -->
+                <div class="glass-card rounded-2xl p-5 cursor-pointer relative flex flex-col justify-between eq-card selected" data-eq="2">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-2xl mb-3">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </div>
+                        <h4 class="font-bold text-lg text-cyan-300 mb-1">魔法魔杖</h4>
+                        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 mb-3 border border-cyan-500/30">
+                            技能：護盾護體
+                        </span>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            不幸輸掉時發動，生成護盾阻擋，<strong class="text-cyan-300">電腦無法得分</strong>！
+                        </p>
+                    </div>
+                    <div class="mt-4 text-xs text-slate-500 border-t border-slate-700/50 pt-2 text-right">
+                        每局限用 1 次
+                    </div>
+                </div>
+
+                <!-- Equipment 3 -->
+                <div class="glass-card rounded-2xl p-5 cursor-pointer relative flex flex-col justify-between eq-card" data-eq="3">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mb-3">
+                            <i class="fa-solid fa-clover"></i>
+                        </div>
+                        <h4 class="font-bold text-lg text-emerald-300 mb-1">幸運草護身符</h4>
+                        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 mb-3 border border-emerald-500/30">
+                            技能：平手算贏
+                        </span>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            雙方平手時發動幸運扭轉，<strong class="text-emerald-300">直接判你獲勝 +1 分</strong>！
+                        </p>
+                    </div>
+                    <div class="mt-4 text-xs text-slate-500 border-t border-slate-700/50 pt-2 text-right">
+                        每局限用 1 次
+                    </div>
+                </div>
+
+            </div>
+
+            <button id="start-btn" class="w-full py-4 bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-amber-400 font-bold text-lg rounded-2xl shadow-lg hover:shadow-purple-500/25 transition duration-300 transform active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-gamepad"></i> 踏上征途 (先拿 5 勝獲勝)
+            </button>
+        </section>
+
+
+        <!-- ================= PAGE 2: BATTLE ARENA ================= -->
+        <section id="battle-screen" class="hidden flex-col gap-6">
+            
+            <!-- Scoreboard & Status Header -->
+            <div class="glass-panel rounded-3xl p-4 md:p-6 grid grid-cols-3 items-center text-center relative overflow-hidden">
+                <!-- Player Profile -->
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 p-0.5 shadow-lg mb-2">
+                        <div class="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center text-2xl md:text-3xl text-purple-400">
+                            <i class="fa-solid fa-user-ninja"></i>
+                        </div>
+                    </div>
+                    <h3 id="display-player-name" class="font-bold text-base md:text-lg text-slate-100 truncate max-w-[120px]">冒險者</h3>
+                    <!-- Equipped badge -->
+                    <div id="display-equipment" class="mt-1 text-xs px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1">
+                        <i class="fa-solid fa-shield"></i> 裝備中
+                    </div>
+                </div>
+
+                <!-- VS / Scores -->
+                <div class="flex flex-col items-center justify-center">
+                    <span class="text-xs font-bold text-slate-400 tracking-widest uppercase mb-1">搶 5 勝大對決</span>
+                    <div class="flex items-center gap-3 md:gap-6 my-1">
+                        <span id="player-score" class="pixel-font text-3xl md:text-5xl font-black text-amber-400 drop-shadow">0</span>
+                        <span class="text-xl md:text-2xl font-black text-slate-500">:</span>
+                        <span id="computer-score" class="pixel-font text-3xl md:text-5xl font-black text-rose-500 drop-shadow">0</span>
+                    </div>
+                    <span id="round-counter" class="text-xs md:text-sm font-semibold text-purple-300 bg-slate-800/80 px-3 py-1 rounded-full border border-slate-700">
+                        第 1 回合
+                    </span>
+                </div>
+
+                <!-- Computer Profile -->
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-rose-500 to-red-700 p-0.5 shadow-lg mb-2">
+                        <div class="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center text-2xl md:text-3xl text-rose-400">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-base md:text-lg text-slate-100">超能 AI</h3>
+                    <div class="mt-1 text-xs px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1">
+                        <i class="fa-solid fa-microchip"></i> 隨機算術
+                    </div>
+                </div>
+            </div>
+
+            <!-- Battle Arena Center Stage -->
+            <div class="glass-panel rounded-3xl p-6 relative flex flex-col items-center justify-center min-h-[220px]">
+                
+                <!-- Hands Clash Display -->
+                <div id="battle-stage" class="flex items-center justify-around w-full max-w-lg my-2">
+                    <!-- Player Hand -->
+                    <div id="player-hand-container" class="flex flex-col items-center transition-transform duration-300">
+                        <div id="player-hand-icon" class="w-24 h-24 md:w-28 md:h-28 rounded-2xl bg-slate-800 border-2 border-purple-500/40 flex items-center justify-center text-4xl md:text-5xl text-purple-300 shadow-inner">
+                            <i class="fa-solid fa-question"></i>
+                        </div>
+                        <span class="text-xs text-slate-400 mt-2 font-medium">你的出拳</span>
+                    </div>
+
+                    <!-- Versus Effect -->
+                    <div class="text-2xl md:text-3xl font-black italic text-slate-600 animate-pulse">VS</div>
+
+                    <!-- Computer Hand -->
+                    <div id="computer-hand-container" class="flex flex-col items-center transition-transform duration-300">
+                        <div id="computer-hand-icon" class="w-24 h-24 md:w-28 md:h-28 rounded-2xl bg-slate-800 border-2 border-rose-500/40 flex items-center justify-center text-4xl md:text-5xl text-rose-300 shadow-inner">
+                            <i class="fa-solid fa-question"></i>
+                        </div>
+                        <span class="text-xs text-slate-400 mt-2 font-medium">電腦出拳</span>
+                    </div>
+                </div>
+
+                <!-- Result Message Banner -->
+                <div id="round-result-msg" class="mt-4 text-center font-bold text-base md:text-lg min-h-[28px] text-amber-300">
+                    請選擇出拳開始對決！
+                </div>
+            </div>
+
+            <!-- Action Controls & Skill Toggle -->
+            <div class="glass-panel rounded-3xl p-5 md:p-6 flex flex-col gap-4">
+                
+                <!-- Skill Activation Bar -->
+                <div class="flex items-center justify-between bg-slate-900/60 p-3 md:p-4 rounded-2xl border border-slate-700/60">
+                    <div class="flex items-center gap-3">
+                        <div id="skill-icon-badge" class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 id="skill-name" class="font-bold text-sm md:text-base text-slate-200">裝備技能</h4>
+                                <span id="skill-status-tag" class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">可使用</span>
+                            </div>
+                            <p id="skill-desc" class="text-xs text-slate-400 hidden md:block">每局限發動一次</p>
+                        </div>
+                    </div>
+
+                    <!-- Skill Toggle Switch/Button -->
+                    <button id="toggle-skill-btn" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 active:scale-95 text-white font-bold text-xs md:text-sm shadow-md transition flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>發動技能</span>
+                    </button>
+                </div>
+
+                <!-- Choice Buttons Grid -->
+                <div class="grid grid-cols-3 gap-3 md:gap-4">
+                    <button class="choice-btn p-4 md:p-5 rounded-2xl bg-slate-800/80 hover:bg-purple-900/40 border border-slate-700 hover:border-purple-500/50 flex flex-col items-center justify-center gap-2 transition duration-200 active:scale-95 group" data-choice="剪刀">
+                        <i class="fa-solid fa-hand-scissors text-3xl md:text-4xl text-purple-400 group-hover:scale-110 transition-transform"></i>
+                        <span class="font-bold text-sm md:text-base text-slate-200">剪刀</span>
+                    </button>
+
+                    <button class="choice-btn p-4 md:p-5 rounded-2xl bg-slate-800/80 hover:bg-purple-900/40 border border-slate-700 hover:border-purple-500/50 flex flex-col items-center justify-center gap-2 transition duration-200 active:scale-95 group" data-choice="石頭">
+                        <i class="fa-solid fa-hand-back-fist text-3xl md:text-4xl text-indigo-400 group-hover:scale-110 transition-transform"></i>
+                        <span class="font-bold text-sm md:text-base text-slate-200">石頭</span>
+                    </button>
+
+                    <button class="choice-btn p-4 md:p-5 rounded-2xl bg-slate-800/80 hover:bg-purple-900/40 border border-slate-700 hover:border-purple-500/50 flex flex-col items-center justify-center gap-2 transition duration-200 active:scale-95 group" data-choice="布">
+                        <i class="fa-solid fa-hand text-3xl md:text-4xl text-pink-400 group-hover:scale-110 transition-transform"></i>
+                        <span class="font-bold text-sm md:text-base text-slate-200">布</span>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Combat Log -->
+            <div class="glass-panel rounded-3xl p-4">
+                <div class="flex items-center justify-between mb-2 px-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-scroll text-purple-400"></i> 對戰紀錄 Log
+                    </span>
+                    <button id="clear-log-btn" class="text-[11px] text-slate-500 hover:text-slate-300">清除紀錄</button>
+                </div>
+                <div id="combat-log" class="h-28 overflow-y-auto space-y-1.5 pr-2 text-xs font-mono">
+                    <div class="text-slate-500 italic">--- 準備好迎戰電腦，出拳後戰報將顯示於此 ---</div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center text-xs text-slate-500 my-4">
+        RPG Rock Paper Scissors Game &copy; 2026 網頁裝備技能版
+    </footer>
+
+    <!-- ================= GAME OVER MODAL ================= -->
+    <div id="game-over-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="glass-panel border-2 border-purple-500/40 rounded-3xl p-6 md:p-8 max-w-md w-full text-center shadow-2xl transform scale-90 transition-transform duration-300" id="modal-card">
+            
+            <div id="modal-icon-bg" class="w-20 h-20 rounded-full mx-auto flex items-center justify-center text-4xl mb-4 bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                <i id="modal-icon" class="fa-solid fa-trophy"></i>
+            </div>
+
+            <h2 id="modal-title" class="text-2xl md:text-3xl font-black mb-2 text-amber-300">大獲全勝！</h2>
+            <p id="modal-subtitle" class="text-slate-300 text-sm mb-6">你成功以 5 勝姿態擊敗了電腦！</p>
+
+            <div class="bg-slate-900/80 rounded-xl p-4 mb-6 flex justify-around items-center border border-slate-800">
+                <div>
+                    <span class="text-xs text-slate-400 block">最終比分</span>
+                    <span id="modal-final-score" class="pixel-font text-xl text-amber-400 font-bold">5 : 2</span>
+                </div>
+                <div class="h-8 w-px bg-slate-800"></div>
+                <div>
+                    <span class="text-xs text-slate-400 block">總回合數</span>
+                    <span id="modal-total-rounds" class="pixel-font text-xl text-purple-300 font-bold">8</span>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button id="modal-restart-btn" class="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg transition active:scale-95">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> 再次挑戰
+                </button>
+                <button id="modal-reselect-btn" class="py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition active:scale-95">
+                    <i class="fa-solid fa-gear"></i> 重選裝備
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+        // 裝備資料庫
+        const EQUIPMENTS = {
+            "1": {
+                name: "黃金鍵盤",
+                skill: "雙倍傷害",
+                desc: "獲勝時獲得 2 勝 (每局限用 1 次)",
+                icon: "fa-keyboard",
+                color: "amber"
+            },
+            "2": {
+                name: "魔法魔杖",
+                skill: "護盾護體",
+                desc: "輸掉時不計電腦得分 (每局限用 1 次)",
+                icon: "fa-wand-magic-sparkles",
+                color: "cyan"
+            },
+            "3": {
+                name: "幸運草護身符",
+                skill: "平手算贏",
+                desc: "平手時直接算你獲勝 (每局限用 1 次)",
+                icon: "fa-clover",
+                color: "emerald"
+            }
+        };
+
+        // 手勢對應圖示
+        const HAND_ICONS = {
+            "剪刀": "fa-hand-scissors",
+            "石頭": "fa-hand-back-fist",
+            "布": "fa-hand"
+        };
+
+        // 遊戲狀態變數
+        let playerName = "冒險者";
+        let selectedEqKey = "2"; // 預設魔法魔杖
+        let playerScore = 0;
+        let computerScore = 0;
+        let roundNum = 1;
+        let skillUsedInGame = false; // 本局是否已發動過
+        let isSkillActiveForRound = false; // 當前回合是否預備發動技能
+        let isAnimating = false;
+
+        // DOM 元素引用
+        const setupScreen = document.getElementById("setup-screen");
+        const battleScreen = document.getElementById("battle-screen");
+        const playerNameInput = document.getElementById("player-name-input");
+        const eqCards = document.querySelectorAll(".eq-card");
+        const startBtn = document.getElementById("start-btn");
+
+        const displayPlayerName = document.getElementById("display-player-name");
+        const displayEquipment = document.getElementById("display-equipment");
+        const playerScoreEl = document.getElementById("player-score");
+        const computerScoreEl = document.getElementById("computer-score");
+        const roundCounterEl = document.getElementById("round-counter");
+
+        const playerHandIcon = document.getElementById("player-hand-icon");
+        const computerHandIcon = document.getElementById("computer-hand-icon");
+        const playerHandContainer = document.getElementById("player-hand-container");
+        const computerHandContainer = document.getElementById("computer-hand-container");
+        const roundResultMsg = document.getElementById("round-result-msg");
+
+        const skillIconBadge = document.getElementById("skill-icon-badge");
+        const skillNameEl = document.getElementById("skill-name");
+        const skillStatusTag = document.getElementById("skill-status-tag");
+        const skillDescEl = document.getElementById("skill-desc");
+        const toggleSkillBtn = document.getElementById("toggle-skill-btn");
+
+        const choiceBtns = document.querySelectorAll(".choice-btn");
+        const combatLog = document.getElementById("combat-log");
+        const clearLogBtn = document.getElementById("clear-log-btn");
+
+        const gameOverModal = document.getElementById("game-over-modal");
+        const modalCard = document.getElementById("modal-card");
+        const modalIconBg = document.getElementById("modal-icon-bg");
+        const modalIcon = document.getElementById("modal-icon");
+        const modalTitle = document.getElementById("modal-title");
+        const modalSubtitle = document.getElementById("modal-subtitle");
+        const modalFinalScore = document.getElementById("modal-final-score");
+        const modalTotalRounds = document.getElementById("modal-total-rounds");
+        const modalRestartBtn = document.getElementById("modal-restart-btn");
+        const modalReselectBtn = document.getElementById("modal-reselect-btn");
+
+        // 初始化：選擇裝備點擊事件
+        eqCards.forEach(card => {
+            card.addEventListener("click", () => {
+                eqCards.forEach(c => c.classList.remove("selected"));
+                card.classList.add("selected");
+                selectedEqKey = card.getAttribute("data-eq");
+            });
+        });
+
+        // 開始遊戲按鈕
+        startBtn.addEventListener("click", () => {
+            const inputVal = playerNameInput.value.trim();
+            playerName = inputVal !== "" ? inputVal : "冒險者";
+            
+            // 設定戰鬥介面玩家資訊
+            displayPlayerName.innerText = playerName;
+            const eq = EQUIPMENTS[selectedEqKey];
+            displayEquipment.innerHTML = `<i class="fa-solid ${eq.icon}"></i> ${eq.name}`;
+
+            // 隱藏設定頁，顯示對戰頁
+            setupScreen.classList.add("hidden");
+            battleScreen.classList.remove("hidden");
+            battleScreen.classList.add("flex");
+
+            // 初始化全新對戰
+            resetFullMatch();
+        });
+
+        // 發動技能切換按鈕
+        toggleSkillBtn.addEventListener("click", () => {
+            if (skillUsedInGame) return; // 已經用過了
+
+            isSkillActiveForRound = !isSkillActiveForRound;
+            updateSkillUI();
+        });
+
+        // 更新技能按鈕與狀態 UI
+        function updateSkillUI() {
+            const eq = EQUIPMENTS[selectedEqKey];
+            skillNameEl.innerText = `技能：${eq.skill}`;
+            skillDescEl.innerText = eq.desc;
+
+            if (skillUsedInGame) {
+                // 已消耗
+                skillStatusTag.className = "text-[10px] px-2 py-0.5 rounded bg-slate-700 text-slate-400 border border-slate-600";
+                skillStatusTag.innerText = "本局已使用";
+                toggleSkillBtn.disabled = true;
+                toggleSkillBtn.className = "px-4 py-2 rounded-xl bg-slate-800 text-slate-500 font-bold text-xs md:text-sm cursor-not-allowed flex items-center gap-2 border border-slate-700";
+                toggleSkillBtn.innerHTML = `<i class="fa-solid fa-ban"></i> 技能已耗盡`;
+                toggleSkillBtn.classList.remove("skill-active-glow");
+            } else if (isSkillActiveForRound) {
+                // 當前回合開啟中
+                skillStatusTag.className = "text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse";
+                skillStatusTag.innerText = "技能準備發動中！";
+                toggleSkillBtn.className = "px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs md:text-sm shadow-lg flex items-center gap-2 transform scale-105 transition skill-active-glow";
+                toggleSkillBtn.innerHTML = `<i class="fa-solid fa-bolt-lightning"></i> 技能已預備 (點擊取消)`;
+            } else {
+                // 可用，未開啟
+                skillStatusTag.className = "text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                skillStatusTag.innerText = "可使用 (每局1次)";
+                toggleSkillBtn.disabled = false;
+                toggleSkillBtn.className = "px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 active:scale-95 text-white font-bold text-xs md:text-sm shadow-md transition flex items-center gap-2";
+                toggleSkillBtn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> 發動技能`;
+                toggleSkillBtn.classList.remove("skill-active-glow");
+            }
+        }
+
+        // 玩家出拳按鈕
+        choiceBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                if (isAnimating) return;
+                const playerChoice = btn.getAttribute("data-choice");
+                playRound(playerChoice);
+            });
+        });
+
+        // 主要核心遊戲回合邏輯
+        function playRound(playerChoice) {
+            isAnimating = true;
+
+            // 如果本回合預備發動技能，標記技能已消耗
+            const usedSkillThisRound = isSkillActiveForRound && !skillUsedInGame;
+            if (usedSkillThisRound) {
+                skillUsedInGame = true;
+                isSkillActiveForRound = false;
+                updateSkillUI();
+            }
+
+            // 電腦隨機選擇
+            const options = ["剪刀", "石頭", "布"];
+            const computerChoice = options[Math.floor(Math.random() * options.length)];
+
+            // 開始搖晃動畫
+            playerHandIcon.innerHTML = `<i class="fa-solid fa-hand-back-fist"></i>`;
+            computerHandIcon.innerHTML = `<i class="fa-solid fa-hand-back-fist"></i>`;
+            playerHandContainer.classList.add("animate-shake");
+            computerHandContainer.classList.add("animate-shake");
+            roundResultMsg.innerText = "剪刀、石頭、布...";
+            roundResultMsg.className = "mt-4 text-center font-bold text-base md:text-lg text-slate-400 animate-pulse";
+
+            setTimeout(() => {
+                // 動畫結束，顯示結果
+                playerHandContainer.classList.remove("animate-shake");
+                computerHandContainer.classList.remove("animate-shake");
+
+                playerHandIcon.innerHTML = `<i class="fa-solid ${HAND_ICONS[playerChoice]}"></i>`;
+                computerHandIcon.innerHTML = `<i class="fa-solid ${HAND_ICONS[computerChoice]}"></i>`;
+
+                // 進行勝負與技能結算
+                evaluateOutcome(playerChoice, computerChoice, usedSkillThisRound);
+
+                // 更新回合數
+                roundNum++;
+                roundCounterEl.innerText = `第 ${roundNum} 回合`;
+
+                isAnimating = false;
+
+                // 檢查是否有人達到 5 勝
+                if (playerScore >= 5 || computerScore >= 5) {
+                    setTimeout(showGameOver, 800);
+                }
+            }, 600);
+        }
+
+        // 勝負與裝備技能邏輯判定
+        function evaluateOutcome(playerChoice, computerChoice, usedSkill) {
+            const eq = EQUIPMENTS[selectedEqKey];
+            let resultText = "";
+            let logMsg = "";
+            let logBg = "text-slate-300";
+
+            if (playerChoice === computerChoice) {
+                // 平手
+                if (usedSkill && eq.name === "幸運草護身符") {
+                    playerScore += 1;
+                    resultText = "🍀 幸運草生效！平手局逆轉直接算你獲勝！🎉";
+                    roundResultMsg.className = "mt-4 text-center font-extrabold text-base md:text-lg text-emerald-400";
+                    logMsg = `第 ${roundNum} 回合：出【${playerChoice}】與電腦【${computerChoice}】平手 ➜ [幸運草技能發動] 獲得 1 勝！`;
+                    logBg = "text-emerald-400 font-bold";
+                } else {
+                    resultText = "平手！雙方僵持不下。";
+                    roundResultMsg.className = "mt-4 text-center font-bold text-base md:text-lg text-slate-300";
+                    logMsg = `第 ${roundNum} 回合：雙方皆出【${playerChoice}】，平手。`;
+                }
+            } else if (
+                (playerChoice === "剪刀" && computerChoice === "布") ||
+                (playerChoice === "石頭" && computerChoice === "剪刀") ||
+                (playerChoice === "布" && computerChoice === "石頭")
+            ) {
+                // 玩家勝利
+                if (usedSkill && eq.name === "黃金鍵盤") {
+                    playerScore += 2;
+                    resultText = "⌨️ 黃金鍵盤爆擊！雙倍傷害，獲得 2 勝！🎉🎉";
+                    roundResultMsg.className = "mt-4 text-center font-extrabold text-base md:text-lg text-amber-300";
+                    logMsg = `第 ${roundNum} 回合：出【${playerChoice}】擊敗【${computerChoice}】➜ [黃金鍵盤技能發動] 獲得 2 勝！`;
+                    logBg = "text-amber-300 font-bold";
+                } else {
+                    playerScore += 1;
+                    resultText = "🎉 這回合你贏了！";
+                    roundResultMsg.className = "mt-4 text-center font-bold text-base md:text-lg text-purple-300";
+                    logMsg = `第 ${roundNum} 回合：出【${playerChoice}】勝過電腦【${computerChoice}】，獲得 1 勝。`;
+                    logBg = "text-purple-300";
+                }
+            } else {
+                // 電腦勝利
+                if (usedSkill && eq.name === "魔法魔杖") {
+                    resultText = "🪄 魔法護盾成功阻擋！電腦本回合無法得分！🛡️";
+                    roundResultMsg.className = "mt-4 text-center font-extrabold text-base md:text-lg text-cyan-300";
+                    logMsg = `第 ${roundNum} 回合：出【${playerChoice}】不敵【${computerChoice}】➜ [魔法魔杖技能發動] 生成護盾阻擋得分！`;
+                    logBg = "text-cyan-300 font-bold";
+                } else {
+                    computerScore += 1;
+                    resultText = "💥 這回合電腦贏了！";
+                    roundResultMsg.className = "mt-4 text-center font-bold text-base md:text-lg text-rose-400";
+                    logMsg = `第 ${roundNum} 回合：出【${playerChoice}】不敵電腦【${computerChoice}】，電腦獲得 1 勝。`;
+                    logBg = "text-rose-400";
+                }
+            }
+
+            // 更新顯示與戰報 Log
+            roundResultMsg.innerText = resultText;
+            playerScoreEl.innerText = playerScore;
+            computerScoreEl.innerText = computerScore;
+
+            addLog(logMsg, logBg);
+        }
+
+        // 新增 Log 戰報
+        function addLog(msg, colorClass) {
+            const entry = document.createElement("div");
+            entry.className = `${colorClass} py-0.5 transition-all`;
+            entry.innerText = msg;
+
+            // 若只有初始文字，先清空
+            if (combatLog.children.length === 1 && combatLog.children[0].classList.contains("italic")) {
+                combatLog.innerHTML = "";
+            }
+
+            combatLog.appendChild(entry);
+            combatLog.scrollTop = combatLog.scrollHeight;
+        }
+
+        // 清除戰報紀錄
+        clearLogBtn.addEventListener("click", () => {
+            combatLog.innerHTML = `<div class="text-slate-500 italic">--- 紀錄已清除 ---</div>`;
+        });
+
+        // 結算彈窗顯示
+        function showGameOver() {
+            const isPlayerWin = playerScore >= 5;
+
+            if (isPlayerWin) {
+                modalIconBg.className = "w-20 h-20 rounded-full mx-auto flex items-center justify-center text-4xl mb-4 bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                modalIcon.className = "fa-solid fa-trophy";
+                modalTitle.innerText = "🏆 大獲全勝！";
+                modalTitle.className = "text-2xl md:text-3xl font-black mb-2 text-amber-300";
+                modalSubtitle.innerText = `太強了【${playerName}】！你成功奪得 5 勝，成為剪刀石頭布大師！`;
+            } else {
+                modalIconBg.className = "w-20 h-20 rounded-full mx-auto flex items-center justify-center text-4xl mb-4 bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                modalIcon.className = "fa-solid fa-skull-crossbones";
+                modalTitle.innerText = "💻 遺憾戰敗...";
+                modalTitle.className = "text-2xl md:text-3xl font-black mb-2 text-rose-400";
+                modalSubtitle.innerText = `電腦率先獲得了 5 勝，調整狀態後再次發起挑戰吧！`;
+            }
+
+            modalFinalScore.innerText = `${playerScore} : ${computerScore}`;
+            modalTotalRounds.innerText = roundNum - 1;
+
+            gameOverModal.classList.remove("opacity-0", "pointer-events-none");
+            modalCard.classList.remove("scale-90");
+            modalCard.classList.add("scale-100");
+        }
+
+        // 重設整場遊戲 (相同裝備)
+        function resetFullMatch() {
+            playerScore = 0;
+            computerScore = 0;
+            roundNum = 1;
+            skillUsedInGame = false;
+            isSkillActiveForRound = false;
+
+            playerScoreEl.innerText = "0";
+            computerScoreEl.innerText = "0";
+            roundCounterEl.innerText = "第 1 回合";
+            roundResultMsg.innerText = "請選擇出拳開始對決！";
+            roundResultMsg.className = "mt-4 text-center font-bold text-base md:text-lg text-amber-300";
+
+            playerHandIcon.innerHTML = `<i class="fa-solid fa-question"></i>`;
+            computerHandIcon.innerHTML = `<i class="fa-solid fa-question"></i>`;
+
+            combatLog.innerHTML = `<div class="text-slate-500 italic">--- 準備好迎戰電腦，出拳後戰報將顯示於此 ---</div>`;
+
+            updateSkillUI();
+
+            // 關閉 Modal
+            gameOverModal.classList.add("opacity-0", "pointer-events-none");
+            modalCard.classList.remove("scale-100");
+            modalCard.classList.add("scale-90");
+        }
+
+        // 再玩一次按鈕
+        modalRestartBtn.addEventListener("click", resetFullMatch);
+
+        // 重選裝備按鈕
+        modalReselectBtn.addEventListener("click", () => {
+            gameOverModal.classList.add("opacity-0", "pointer-events-none");
+            battleScreen.classList.add("hidden");
+            battleScreen.classList.remove("flex");
+            setupScreen.classList.remove("hidden");
+        });
+    </script>
+</body>
+</html>
